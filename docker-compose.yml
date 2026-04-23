@@ -1,27 +1,33 @@
-version: '3.8'
-
 services:
   app:
-    build: ./backend
+    build: 
+      context: .
+      dockerfile: dockerfile
     container_name: roadguard_app
-    restart: always
+    restart: unless-stopped
     ports:
       - "5000:5000"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     environment:
       DB_HOST: mysql
       DB_USER: root
       DB_PASSWORD: root123
       DB_NAME: roadguard
+      NODE_ENV: development
+      # Enable file watching in Docker
+      CHOKIDAR_USEPOLLING: "true"
+      CHOKIDAR_INTERVAL: "1000"
     volumes:
-      - ./backend:/app
-    command: npm run dev
+      - .:/app
+      - /app/node_modules
+      - /app/.git
 
   mysql:
     image: mysql:8.0
     container_name: roadguard_mysql
-    restart: always
+    restart: unless-stopped
     environment:
       MYSQL_ROOT_PASSWORD: root123
       MYSQL_DATABASE: roadguard
@@ -29,16 +35,24 @@ services:
       - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: roadguard_phpmyadmin
-    restart: always
+    restart: unless-stopped
     ports:
       - "8080:80"
     environment:
       PMA_HOST: mysql
       MYSQL_ROOT_PASSWORD: root123
+    depends_on:
+      mysql:
+        condition: service_healthy
 
 volumes:
   mysql_data:
