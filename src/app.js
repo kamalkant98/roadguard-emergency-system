@@ -5,7 +5,10 @@ import cors from "cors";
 
 const app = express();
 app.use(cors({
-    origin : process.env.CORS_ORIGIN
+    // origin : process.env.CORS_ORIGIN
+    origin: "*", // allow all (for development)
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
 }));
 
 
@@ -17,7 +20,7 @@ app.use(cookieParser());
 
 
 // import router
-
+import authRouter from "./routes/auth.routes.js";
 import userRouter from "./routes/user.routes.js";
 import subscribeChannelRouter from "./routes/subscription.routes.js";
 import videoRouter from "./routes/video.routes.js";
@@ -26,6 +29,7 @@ app.get('/', (req, res) => {
     res.send('Hello World!')
 })
 
+app.use("/api",authRouter);
 app.use("/users", userRouter)
 app.use("/channel", subscribeChannelRouter)
 app.use("/video", videoRouter)
