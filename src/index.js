@@ -53,7 +53,7 @@ const startServer = async () => {
     await connectDB();
 
     // ✅ Start server
-    app.server = app.listen(PORT, () => {
+    app.server = app.listen(PORT,'0.0.0.0', () => {
       console.log("\n🚀 Server started successfully!");
       console.log(`🌐 Server is running on port: ${PORT}`);
       console.log(`📍 Local URL: http://localhost:${PORT}`);

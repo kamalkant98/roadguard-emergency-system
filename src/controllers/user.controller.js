@@ -19,8 +19,8 @@ const generateAuthToken = (userId, role, connection) => {
             role: role,
             type: 'user'
         },
-        process.env.JWT_SECRET || 'your-secret-key-change-this',
-        { expiresIn: '30d' }
+        process.env.ACCESS_TOKEN_SECRET,
+        { expiresIn: process.env.ACCESS_TOKEN_EXPIRY }
     );
 };
 
@@ -42,7 +42,9 @@ const registerUser = asyncHandler(async (req, res) => {
         work_latitude,
         work_longitude,
         language = 'en',
-        notifications_enabled = true
+        notifications_enabled = true,
+        workshop_name,
+        role_id,
     } = req.body;
 
     // Validation
@@ -106,11 +108,11 @@ const registerUser = asyncHandler(async (req, res) => {
                 emergency_contact_name, emergency_contact_phone, emergency_contact_relation,
                 home_address, home_latitude, home_longitude,
                 work_address, work_latitude, work_longitude,
-                language, notifications_enabled,
+                language, notifications_enabled,workshop_name,
                 created_at, updated_at
-            ) VALUES (?, 1, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW(), NOW())`,
             [
-                uuid, phone_number, email || null, full_name,
+                uuid,role_id || 1,phone_number, email || null, full_name,
                 pinHash, otpCode, otpExpiresAt, false,
                 emergency_contact_name || null,
                 emergency_contact_phone || null,
@@ -122,7 +124,8 @@ const registerUser = asyncHandler(async (req, res) => {
                 work_latitude || null,
                 work_longitude || null,
                 language,
-                notifications_enabled ? 1 : 0
+                notifications_enabled ? 1 : 0,
+                workshop_name
             ]
         );
 
@@ -177,6 +180,8 @@ const registerUser = asyncHandler(async (req, res) => {
 
 // VERIFY OTP (With Transaction)
 const verifyOTP = asyncHandler(async (req, res) => {
+    
+    
     const { phone_number, otp_code, fcm_token } = req.body;
 
     if (!phone_number || !otp_code) {
@@ -359,7 +364,7 @@ const loginUser = asyncHandler(async (req, res) => {
     const { phone_number, pin, fcm_token } = req.body;
 
     if (!phone_number) {
-        throw new ApiError(400, "Phone number is required");
+        return res.status(409).json(new ApiResponse(400, {}, "Phone number is required"))
     }
 
     const connection = await mysqlPool.getConnection();
@@ -377,19 +382,19 @@ const loginUser = asyncHandler(async (req, res) => {
         );
 
         if (users.length === 0) {
-            throw new ApiError(404, "User not found");
+            return res.status(404).json(new ApiResponse(404, {}, "User not found"))
         }
 
         const user = users[0];
 
         // Check if user is blocked
         if (user.is_blocked) {
-            throw new ApiError(403, "Your account has been blocked. Please contact support");
+            return res.status(403).json(new ApiResponse(403, {}, "Your account has been blocked. Please contact support"))
         }
 
         // Check if user is active
         if (!user.is_active) {
-            throw new ApiError(403, "Your account is inactive. Please contact support");
+            return res.status(403).json(new ApiResponse(403, {}, "Your account is inactive. Please contact support"))
         }
 
         // Check if phone is verified
@@ -409,13 +414,15 @@ const loginUser = asyncHandler(async (req, res) => {
             
             console.log(`New OTP sent to ${phone_number}: ${newOTP}`);
             
-            throw new ApiError(401, "Phone number not verified. OTP sent to your number");
+            return res.status(401).json(new ApiResponse(401, {}, "Phone number not verified. OTP sent to your number"))
+
+            
         }
 
         // Verify PIN if provided
         if (pin) {
             if (!user.pin_hash) {
-                throw new ApiError(400, "PIN not set for this account. Please register or use OTP login");
+                return res.status(400).json(new ApiResponse(400, {}, "PIN not set for this account. Please register or use OTP login"))
             }
             
             const isValidPIN = await bcrypt.compare(pin, user.pin_hash);
@@ -493,7 +500,7 @@ const loginUser = asyncHandler(async (req, res) => {
 // GET USER PROFILE (No transaction needed, but use connection)
 const getUserProfile = asyncHandler(async (req, res) => {
     const userId = req.user?.id;
-
+    
     if (!userId) {
         throw new ApiError(401, "Unauthorized");
     }

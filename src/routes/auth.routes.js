@@ -17,10 +17,10 @@ import { authenticateUser } from '../middlewares/auth.middleware.js';
 
 
 // Public routes
-router.post('/register', registerUser);
-router.post('/verify-otp', verifyOTP);
-router.post('/resend-otp', resendOTP);
-router.post('/login', loginUser);
+router.post('/register',upload.none(), registerUser);
+router.post('/verify-otp', upload.none(),verifyOTP);
+router.post('/resend-otp',upload.none(), resendOTP);
+router.post('/login',upload.none(), loginUser);
 
 // Protected routes (require authentication)
 router.get('/profile', authenticateUser, getUserProfile);
