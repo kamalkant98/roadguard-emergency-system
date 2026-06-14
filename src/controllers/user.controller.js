@@ -374,7 +374,7 @@ const loginUser = asyncHandler(async (req, res) => {
 
         // Find user
         const [users] = await connection.query(
-            `SELECT id, phone_number, full_name, email, pin_hash, 
+            `SELECT id, phone_number, full_name, email, pin_hash,role_id, 
                     is_phone_verified, is_active, is_blocked, fcm_token
              FROM users 
              WHERE phone_number = ?`,
@@ -470,8 +470,13 @@ const loginUser = asyncHandler(async (req, res) => {
 
         await connection.commit();
 
+        const[userRole] = await connection.query(
+            `SELECT * FROM roles 
+             WHERE id = ?`,
+            [user.role_id]
+        );
         // Generate token
-        const token = generateAuthToken(user.id, 'user');
+        const token = generateAuthToken(user.id, userRole[0]?.slug);
 
         // Return user data (excluding sensitive info)
         const userData = {
@@ -479,13 +484,15 @@ const loginUser = asyncHandler(async (req, res) => {
             phone_number: user.phone_number,
             full_name: user.full_name,
             email: user.email,
-            is_phone_verified: user.is_phone_verified
+            is_phone_verified: user.is_phone_verified,
+            role : userRole[0]?.slug
         };
 
         return res.status(200).json(
             new ApiResponse(200, {
                 user: userData,
-                token: token
+                token: token,
+                
             }, "Login successful")
         );
 
@@ -511,7 +518,7 @@ const getUserProfile = asyncHandler(async (req, res) => {
         // Get user details
         const [users] = await connection.query(
             `SELECT id, uuid, phone_number, email, full_name, profile_picture,
-                    is_phone_verified, language, notifications_enabled,
+                    is_phone_verified, language, notifications_enabled,role_id,
                     emergency_contact_name, emergency_contact_phone, emergency_contact_relation,
                     home_address, home_latitude, home_longitude,
                     work_address, work_latitude, work_longitude,
@@ -545,10 +552,17 @@ const getUserProfile = asyncHandler(async (req, res) => {
             [userId]
         );
 
+        const[userRole] = await connection.query(
+            `SELECT * FROM roles 
+             WHERE id = ?`,
+            [users[0].role_id]
+        );
+
         const userProfile = {
             ...users[0],
             vehicles: vehicles,
-            recent_requests: recentRequests
+            recent_requests: recentRequests,
+            role: userRole[0]
         };
 
         return res.status(200).json(
