@@ -2,7 +2,7 @@ import {asyncHandler} from "../utils/asyncHandler.js"
 import {ApiError} from "../utils/ApiError.js"
 import {ApiResponse} from "../utils/ApiResponse.js"
 import {User} from "../models/user.model.js"
-import {uploadToCloud,deleteSingleFile} from "../utils/Cloudinary.js"
+import {uploadToCloud,deleteSingleFile} from "../utils/cloudinary.js"
 import jwt from "jsonwebtoken"
 import fs from "fs"
 

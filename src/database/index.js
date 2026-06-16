@@ -6,6 +6,7 @@ const mysqlPool = mysql.createPool({
   user: process.env.DB_USER || "root",
   password: process.env.DB_PASSWORD || "root123",
   database: process.env.DB_NAME || "roadguard",
+  port: process.env.DB_PORT,
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
@@ -18,7 +19,7 @@ export const connectDB = async () => {
     console.log("✅ MySQL Connected");
     connection.release();
   } catch (error) {
-    console.error("❌ MySQL Error:", error.message);
+    console.error("❌ MySQL Error:", error);
     process.exit(1);
   }
 };
