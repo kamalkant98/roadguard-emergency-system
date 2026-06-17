@@ -364,6 +364,7 @@ const loginUser = asyncHandler(async (req, res) => {
     const { phone_number, pin, fcm_token } = req.body;
 
     if (!phone_number) {
+        console.log("login USer","Phone number is required");
         return res.status(409).json(new ApiResponse(400, {}, "Phone number is required"))
     }
 
@@ -382,6 +383,7 @@ const loginUser = asyncHandler(async (req, res) => {
         );
 
         if (users.length === 0) {
+            console.log("login USer","User not found");
             return res.status(404).json(new ApiResponse(404, {}, "User not found"))
         }
 
@@ -389,11 +391,13 @@ const loginUser = asyncHandler(async (req, res) => {
 
         // Check if user is blocked
         if (user.is_blocked) {
+            console.log("login USer","Your account has been blocked. Please contact support");
             return res.status(403).json(new ApiResponse(403, {}, "Your account has been blocked. Please contact support"))
         }
 
         // Check if user is active
         if (!user.is_active) {
+            console.log("login USer","Your account is inactive. Please contact support");
             return res.status(403).json(new ApiResponse(403, {}, "Your account is inactive. Please contact support"))
         }
 
@@ -422,6 +426,7 @@ const loginUser = asyncHandler(async (req, res) => {
         // Verify PIN if provided
         if (pin) {
             if (!user.pin_hash) {
+                console.log("login USer","PIN not set for this account. Please register or use OTP login");
                 return res.status(400).json(new ApiResponse(400, {}, "PIN not set for this account. Please register or use OTP login"))
             }
             
@@ -437,6 +442,7 @@ const loginUser = asyncHandler(async (req, res) => {
                         req.ip || null
                     ]
                 );
+                console.log("login USer","Invalid PIN");
                 throw new ApiError(401, "Invalid PIN");
             }
         }
@@ -498,6 +504,8 @@ const loginUser = asyncHandler(async (req, res) => {
 
     } catch (error) {
         await connection.rollback();
+        console.log("login USer",error);
+        
         throw error;
     } finally {
         connection.release();
