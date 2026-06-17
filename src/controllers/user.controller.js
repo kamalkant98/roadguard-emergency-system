@@ -483,7 +483,7 @@ const loginUser = asyncHandler(async (req, res) => {
         );
         // Generate token
         const token = generateAuthToken(user.id, userRole[0]?.slug);
-
+         console.log("login USer","token done");
         // Return user data (excluding sensitive info)
         const userData = {
             id: user.id,
@@ -493,6 +493,7 @@ const loginUser = asyncHandler(async (req, res) => {
             is_phone_verified: user.is_phone_verified,
             role : userRole[0]?.slug
         };
+        console.log("login USer","success");
 
         return res.status(200).json(
             new ApiResponse(200, {
