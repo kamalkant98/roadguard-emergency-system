@@ -6,11 +6,14 @@ import cors from "cors";
 const app = express();
 app.use(cors({
     // origin : process.env.CORS_ORIGIN
-    origin: "http://localhost:3001", // allow all (for development)
+    origin: [
+        "http://localhost:3001",
+        "https://roadguard-emergency-system-frontend.onrender.com"
+    ],
     methods: ["GET", "POST", "PUT", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
 }));
-
+//https://roadguard-emergency-system-frontend.onrender.com/
 
 
 app.use(express.json({limit:'20kb'}))

@@ -443,7 +443,7 @@ const loginUser = asyncHandler(async (req, res) => {
                     ]
                 );
                 console.log("login USer","Invalid PIN");
-                throw new ApiError(401, "Invalid PIN");
+                return res.status(401).json(new ApiResponse(401, {}, "Invalid PIN"));
             }
         }
 
